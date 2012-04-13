@@ -4,8 +4,20 @@ class Model_Notification extends Mongo_Crud
 {
 	protected static $_collection_name = 'notifications';
 
-	public $status = Notify::STATUS_SCHEDULED;
-	public $method = array(Notify::METHOD_EMAIL, Notify::METHOD_INTERNAL);
+	const METHOD_EMAIL 		= 'email';
+	const METHOD_INTERNAL	= 'internal';
+	const METHOD_SMS		= 'sms';
+	const METHOD_PHONE		= 'phone';
+	const METHOD_TWITTER	= 'twitter';
+
+	const STATUS_SCHEDULED	= 'scheduled';
+	const STATUS_DELAYED	= 'delayed';
+	const STATUS_SENT		= 'sent';
+	const STATUS_ERROR		= 'error';
+
+	public $type 	= null;
+	public $status 	= Notification::STATUS_SCHEDULED;
+	public $methods = array(Notification::METHOD_EMAIL, Notification::METHOD_INTERNAL);
 	public $notices = array(
 				'conversions' => 0,
 				'list' => array(
@@ -13,13 +25,13 @@ class Model_Notification extends Mongo_Crud
 				);
 
 
-	public function set_method($method = array())
+	public function set_methods($methods = array())
 	{
-		if(!is_array($method))
+		if(!is_array($methods))
 		{
-			$method = array($method);
+			$methods = array($methods);
 		}
-		$this->method = $method;
+		$this->methods = $methods;
 
 		return $this;
 	}
@@ -36,15 +48,26 @@ class Model_Notification extends Mongo_Crud
 		$this->notices['conversions']++;
 
 		$this->notices['list'][$id]['conversions']['count']++;
-		$this->notices['list'][$id]['conversions'][] = time();
+		$this->notices['list'][$id]['conversions']['list'][] = time();
 
 		$this->save();
 
 		return $this;
 	}
 
-	public function add_notice()
+	public function add_notice($type = null, $data = array(), $method = null)
 	{
+		$id = Str::random('unique');
+
+		$this->notices['list'][$id] = array(
+			'conversions'	=> array(
+				'count'	=> 0,
+				'list'	=> array(),
+				),
+			'method'	=> $method,
+			'type'		=> $type,
+			'data'		=> $data,
+			);
 
 
 		return $this;
